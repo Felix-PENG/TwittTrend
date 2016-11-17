@@ -15,6 +15,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.cc.twitttrend.model.Tweet;
 import com.cc.twitttrend.thread.FetchTweetsThread;
+import com.cc.twitttrend.thread.SentimentAnalysisThread;
 
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
@@ -32,8 +33,10 @@ public class KeywordServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     
 	public void init(){
-		Thread t = new Thread(new FetchTweetsThread());
-		t.start();
+		Thread fetchTweets = new Thread(new FetchTweetsThread());
+		Thread sentimentAnlysis = new Thread(new SentimentAnalysisThread());
+		fetchTweets.start();
+		sentimentAnlysis.start();
 	}
     /**
      * @see HttpServlet#HttpServlet()
@@ -56,57 +59,57 @@ public class KeywordServlet extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		PrintWriter out = response.getWriter();
-		String keyword = request.getParameter("keyword");
-		
-		
-//		TransportClient client = TransportClient.builder().build()
-//		        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
-		JestClientFactory factory = new JestClientFactory();
-		factory.setHttpClientConfig(new HttpClientConfig
-		                        .Builder("http://search-twittmap-7jxppunqbynyqq7m5aed3liifq.us-east-1.es.amazonaws.com")
-		                        .multiThreaded(true)
-		                        .build());
-		JestClient client = factory.getObject();
-//		SearchResponse res;
+//		PrintWriter out = response.getWriter();
+//		String keyword = request.getParameter("keyword");
+//		
+//		
+////		TransportClient client = TransportClient.builder().build()
+////		        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
+//		JestClientFactory factory = new JestClientFactory();
+//		factory.setHttpClientConfig(new HttpClientConfig
+//		                        .Builder("http://search-twittmap-7jxppunqbynyqq7m5aed3liifq.us-east-1.es.amazonaws.com")
+//		                        .multiThreaded(true)
+//		                        .build());
+//		JestClient client = factory.getObject();
+////		SearchResponse res;
+////		if(keyword.equals("All")){
+////			res = client.prepareSearch("twitter")
+////					.setTypes("tweet")
+////			        .setQuery(QueryBuilders.matchAllQuery())
+////			        .setSize(10000)
+////			        .execute()
+////			        .actionGet();
+////		}else{
+////			res = client.prepareSearch("twitter")
+////					.setTypes("tweet")
+////			        .setQuery(QueryBuilders.queryStringQuery(keyword))
+////			        .setSize(10000)
+////			        .execute()
+////			        .actionGet();
+////		}
+//		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 //		if(keyword.equals("All")){
-//			res = client.prepareSearch("twitter")
-//					.setTypes("tweet")
-//			        .setQuery(QueryBuilders.matchAllQuery())
-//			        .setSize(10000)
-//			        .execute()
-//			        .actionGet();
+//			searchSourceBuilder.query(QueryBuilders.matchAllQuery());
 //		}else{
-//			res = client.prepareSearch("twitter")
-//					.setTypes("tweet")
-//			        .setQuery(QueryBuilders.queryStringQuery(keyword))
-//			        .setSize(10000)
-//			        .execute()
-//			        .actionGet();
+//			searchSourceBuilder.query(QueryBuilders.queryStringQuery(keyword));
 //		}
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		if(keyword.equals("All")){
-			searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-		}else{
-			searchSourceBuilder.query(QueryBuilders.queryStringQuery(keyword));
-		}
-
-		Search search = new Search.Builder(searchSourceBuilder.toString())
-                .addIndex("twitter")
-                .addType("tweet")
-                .setParameter(Parameters.SIZE, 10000)
-                .build();
-
-		JestResult result = client.execute(search);
-		List<Tweet> tweetList = result.getSourceAsObjectList(Tweet.class);
-		//SearchHit[] hits = res.getHits().getHits();
-//		System.out.println(hits.size());
-//		for(int i = 0;i < hits.size();i++){
-//			Tweet t = hits.get(i).source;
-//			tweetList.add(t);
-//		}
-	
-		JSONArray jsonList = JSONArray.fromObject(tweetList);
-		out.println(jsonList);
+//
+//		Search search = new Search.Builder(searchSourceBuilder.toString())
+//                .addIndex("twitter")
+//                .addType("tweet")
+//                .setParameter(Parameters.SIZE, 10000)
+//                .build();
+//
+//		JestResult result = client.execute(search);
+//		List<Tweet> tweetList = result.getSourceAsObjectList(Tweet.class);
+//		//SearchHit[] hits = res.getHits().getHits();
+////		System.out.println(hits.size());
+////		for(int i = 0;i < hits.size();i++){
+////			Tweet t = hits.get(i).source;
+////			tweetList.add(t);
+////		}
+//	
+//		JSONArray jsonList = JSONArray.fromObject(tweetList);
+//		out.println(jsonList);
 	}
 }
