@@ -45,8 +45,10 @@ html, body {
 		var pointArray = new Array(keyword.length);
 		var myMap;
 		var markers = [];
-
-		var wsUri = "ws://localhost:8080/twitttrend/server";
+		
+		var localIP = document.domain + ":" + location.port;
+		var wsUri = "ws://" + localIP + "/twitttrend/server";
+		alert(wsUri);
 		var websocket;
 		
 		function initMap() {
@@ -127,6 +129,7 @@ html, body {
 				image = 'image/smiley_neutral.png';
 			}
 			if(tweet.keyword == $("#filterSelect").val()){
+				alert("New tweet at (" + tweet.latitude + "," + tweet.longitude + ")");
 				var marker = new google.maps.Marker({
 			    	position: new google.maps.LatLng(tweet.latitude,tweet.longitude),
 			        icon:image,
