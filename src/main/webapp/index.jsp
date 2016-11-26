@@ -1,135 +1,146 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
 <html>
 <head>
-	<title>TwittMap</title>
-	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
-	<style>
-	html,body {width: 100%;height:100%;}
-	</style>
+<title>TwittMap</title>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+<style>
+html, body {
+	width: 100%;
+	height: 100%;
+}
+</style>
 </head>
-<body style="margin: 0%;font-family: 'Comic Sans MS', 'Comic Sans', cursive;">
+<body
+	style="margin: 0%; font-family: 'Comic Sans MS', 'Comic Sans', cursive;">
 	<div>
-		<div style="background-color: #0666c6;height:50px;line-height: 50px;box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);">
-			<span style="margin-left: 1%;text-shadow: 2px 2px 10px black;font-size: 5vh;color:white">TwittMap</span>
-			<span style="display: inline-block;float: right;margin-right: 1%;margin-top:8px">
-				<select id="filterSelect" class="form-control" onchange="reloadMarkers()">
-					<option>All</option>
-					<option>President</option>
-					<option>Hillary</option>
-					<option>Clinton</option>
+		<div
+			style="background-color: #0666c6; height: 50px; line-height: 50px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);">
+			<span
+				style="margin-left: 1%; text-shadow: 2px 2px 10px black; font-size: 5vh; color: white">TwittMap</span>
+			<span
+				style="display: inline-block; float: right; margin-right: 1%; margin-top: 8px">
+				<select id="filterSelect" class="form-control"
+				onchange="filter()">
+					<option>Columbia</option>
+					<option>NYC</option>
 					<option>Trump</option>
 					<option>Google</option>
 					<option>Facebook</option>
-					<option>Columbia</option>
-					<option>NYC</option>
-					<option>Job</option>
-					<option>Love</option>
+					<option>Weather</option>
 					<option>Work</option>
-				</select>
-			</span>
-			<span style="float: right;margin-right: 1%;color:white;">Filter</span>
+					<option>Love</option>
+					<option>Food</option>
+					<option>Sports</option>
+			</select>
+			</span> <span style="float: right; margin-right: 1%; color: white;">Filter</span>
 		</div>
-		<div id="map" style="width:100%;height: calc(100% - 50px);"></div>
+		<div id="map" style="width: 100%; height: calc(100% - 50px);"></div>
 	</div>
-	
+
 	<script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
-	<script  type="text/javascript">
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<script>
+		var keyword = ["Columbia","NYC","Trump","Google","Facebook","Weather","Work","Love","Food","Sports"];
+		var pointArray = new Array(keyword.length);
 		var myMap;
-        var markerCluster;
-        var lastKeyword = "All";
-        var dict = []; 
-		
-		window.onload=function(){
-			reloadMarkers();
-			dict['All'] = null;
-			dict['President'] = null;
-			dict['Hillary'] = null;
-			dict['Clinton'] = null;
-			dict['Trump'] = null;
-			dict['Google'] = null;
-			dict['Facebook'] = null;
-			dict['Columbia'] = null;
-			dict['NYC'] = null;
-			dict['Job'] = null;
-			dict['Love'] = null;
-			dict['Work'] = null;
-		}
-		
-		function reloadMarkers(){
-			var keyword = $("#filterSelect").val()
-			if(dict[keyword] != null){
-				//render map with cache data
-				addMarker(dict[keyword]);
-				//fetch real time data in backend
-				$.post("Keyword",
-				{
-					keyword: keyword
-				},
-				function(data){
-					var loc = eval(data);
-					var locations = new Array(loc.length);
-					for(var i = 0;i < loc.length;i++){
-						var tweet = loc[i];
-						locations[i] = new google.maps.LatLng(tweet.latitude,tweet.longitude);
-					}
-					dict[keyword] = locations;	
-				});
-			}else{
-				$.post("Keyword",
-				{
-					keyword: keyword
-				},
-				function(data){
-					var loc = eval(data);
-					var locations = new Array(loc.length);
-					for(var i = 0;i < loc.length;i++){
-					var tweet = loc[i];
-						locations[i] = new google.maps.LatLng(tweet.latitude,tweet.longitude);
-					}
-					dict[keyword] = locations;
-					if(keyword == $("#filterSelect").val()){
-						addMarker(locations);
-					}
-				});
-			}
-		}
+		var markers = [];
+
+		var wsUri = "ws://localhost:8080/twitttrend/server";
+		var websocket;
 		
 		function initMap() {
+			websocket = new WebSocket(wsUri);
+			websocket.onopen = function(evt) {
+		        websocket.send(keyword[0]);
+			}
+			websocket.onmessage = function(evt) {
+				var dataList = eval(evt.data);
+				if(dataList.length > 0){
+					var index = 0;
+	
+					for(var i = 0;i < keyword.length;i++){
+						if(dataList[0].keyword == keyword[i]){
+							index = i;
+							break;
+						}
+					}
+					
+					if(dataList.length == 1){   //new data from backend
+						var data = dataList[0];
+						addMarker(data);
+					}else{ //Search keywords
+						pointArray[index] = [];
+						for(var i = 0;i < dataList.length;i++){
+							var data = dataList[i];
+							pointArray[index].push(data);
+						}
+						replaceMarkers(pointArray[index]);
+					}
+				}else{
+					alert("No data sent back!");
+				}
+			}
+			websocket.onerror = function(evt) {
+				alert('ERROR: ' + evt.data);
+			}
+			
 	        myMap = new google.maps.Map(document.getElementById('map'), {
 	          zoom: 3,
 	          center: {lat: 40, lng: -100},
 	          mapTypeId: google.maps.MapTypeId.TERREN
-	        });	       
+	        });	 
+	      
 	     }
 		
-		function addMarker(locations){
-			if(markerCluster != null){
-				markerCluster.clearMarkers();
+		function replaceMarkers(tweets){	
+			for(var i = 0;i < markers.length;i++){
+				markers[i].setMap(null);
 			}
+			markers = [];
 			
-			var markers = locations.map(function(location, i) {
-		          return new google.maps.Marker({
-		            position: location,
-		            label: '1',
-		            animation: google.maps.Animation.DROP
-		          });
+			markers = tweets.map(function(tweet, i) {
+				var image;
+				if(tweet.sentiment == 'POSITIVE'){
+					image = 'image/smiley_happy.png';
+				}else if(tweet.sentiment == 'NEGATIVE'){
+					image = 'image/smiley_sad.png';
+				}else{
+					image = 'image/smiley_neutral.png';
+				}
+		        return new google.maps.Marker({
+		           position: new google.maps.LatLng(tweet.latitude,
+							tweet.longitude),
+		           icon:image,
+		           map:myMap,
+		         });
 		     });
-
-		      // Add a marker clusterer to manage the markers.
-		      markerCluster = new MarkerClusterer(myMap, markers,
-		          {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'}
-		      );
 		}
 		
-		setInterval(function(){
-			var keyword = $("#filterSelect").val()
-			if(keyword == lastKeyword){
-				reloadMarkers();
+		function addMarker(tweet){
+			var image;
+			if(tweet.sentiment == 'POSITIVE'){
+				image = 'image/smiley_happy.png';
+			}else if(tweet.sentiment == 'NEGATIVE'){
+				image = 'image/smiley_sad.png';
+			}else{
+				image = 'image/smiley_neutral.png';
 			}
-			lastKeyword = keyword;
-		 },8000);
+			if(tweet.keyword == $("#filterSelect").val()){
+				var marker = new google.maps.Marker({
+			    	position: new google.maps.LatLng(tweet.latitude,tweet.longitude),
+			        icon:image,
+			        map:myMap,
+			    });
+				markers.push(marker);
+			}
+		}
+		
+		function filter() {
+			var val = $("#filterSelect").val();
+			websocket.send(val);
+		}
 	</script>
-	<script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjxHGCl5uN2DPCMVaRttY0BeIaMFV-xM4&callback=initMap"></script>
 </body>
 </html>

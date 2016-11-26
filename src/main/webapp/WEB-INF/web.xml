@@ -5,7 +5,18 @@
 <web-app>
   <display-name>TwittTrend</display-name>
   <servlet>
-  	<servlet-name>KeywordServlet</servlet-name>
-  	<servlet-class>com.cc.twitttrend.servlets.KeywordServlet</servlet-class>
+  	<servlet-name>SNSSubscriber</servlet-name>
+  	<display-name>SNSSubscriber</display-name>
+  	<description></description>
+  	<servlet-class>com.cc.twitttrend.servlet.SNSSubscriber</servlet-class>
   </servlet>
+  <servlet>
+  	<servlet-name>WebServer</servlet-name>
+  	<display-name>WebServer</display-name>
+  	<description></description>
+  	<servlet-class>com.cc.twitttrend.servlet.WebServer</servlet-class>
+  </servlet>
+  <welcome-file-list>
+  	<welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
 </web-app>

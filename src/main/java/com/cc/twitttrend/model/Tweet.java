@@ -6,6 +6,8 @@ public class Tweet {
 	double longitude;
 	double latitude;
 	String time;
+	String sentiment;
+	String keyword;
 	
 	public String getUser(){
 		return this.user;
@@ -40,5 +42,19 @@ public class Tweet {
 	}
 	public void setTime(String time){
 		this.time = time;
+	}
+	
+	public String getSentiment(){
+		return this.sentiment;
+	}
+	public void setSentiment(String sentiment){
+		this.sentiment = sentiment;
+	}
+	
+	public String getKeyword(){
+		return this.keyword;
+	}
+	public void setKeyword(String keyword){
+		this.keyword = keyword;
 	}
 }
