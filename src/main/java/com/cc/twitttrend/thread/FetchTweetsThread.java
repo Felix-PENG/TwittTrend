@@ -34,12 +34,12 @@ public class FetchTweetsThread implements Runnable{
 	        		tweet.setLatitude(status.getGeoLocation().getLatitude());
 	        		tweet.setLongitude(status.getGeoLocation().getLongitude());
 	        		for(int i = 0;i < keywords.length;i++){
-	        			if(status.getText().contains(keywords[i])){
+	        			if(status.getText().toLowerCase().contains(keywords[i].toLowerCase())){
 	        				tweet.setKeyword(keywords[i]);
 	        				break;
 	        			}
 	        		}
-	        		
+	        		System.out.println("Fetch:"+tweet.getKeyword());
 	        		SQSWrapper sqs = SQSWrapper.getSingleton();
 	        		Gson gson = new Gson();
 	        		String tweetString = gson.toJson(tweet,Tweet.class);

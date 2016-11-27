@@ -2,7 +2,10 @@ package com.cc.twitttrend.servlet;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServlet;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
@@ -82,9 +85,12 @@ public class WebServer extends HttpServlet {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
+		Map<String,Object> map = new HashMap<String,Object>();
+		map.put("type", "SearchResult");
+		map.put("data", tweetList);
 		Gson gson = new Gson();
-		String msg = gson.toJson(tweetList);
+		String msg = gson.toJson(map);
 		try {
 			synchronized(WebServer.session.getBasicRemote()) {
 				WebServer.session.getBasicRemote().sendText(msg);
@@ -106,6 +112,7 @@ public class WebServer extends HttpServlet {
 		Gson gson = new Gson();
 		Tweet tweet = gson.fromJson(msg,Tweet.class);
 		Index index = new Index.Builder(tweet).index("twitter").type("tweet").build();
+		System.out.println("Send to frontend:" + tweet.getKeyword());
 		try {
 			client.execute(index);
 		} catch (IOException e) {
@@ -113,9 +120,10 @@ public class WebServer extends HttpServlet {
 			e.printStackTrace();
 		}
 
-		List<Tweet> tweetList = new ArrayList<Tweet>();
-		tweetList.add(tweet);
-		String tweetStr = gson.toJson(tweetList);
+		Map<String,Object> map = new HashMap<String,Object>();
+		map.put("type", "RealTime");
+		map.put("data", tweet);
+		String tweetStr = gson.toJson(map);
 		try {
 			synchronized(WebServer.session.getBasicRemote()) {
 				WebServer.session.getBasicRemote().sendText(tweetStr);

@@ -33,6 +33,7 @@ public class SentimentAnalysisThread implements Runnable{
 				List<Message> messages = sqs.receiveMessages();
 				AlchemyLanguage service = new AlchemyLanguage();
 				service.setApiKey("bed54ca30f3471577dd73120c73cd71f8edec493");
+				//service.setApiKey("3adfa81273783e9fb8ff16ae0ba84fa3e65df15a");
 				Map<String,Object> params = new HashMap<String, Object>();
 				
 				for (Message message : messages) {
